@@ -49,7 +49,7 @@ def main() -> None:
         
         tx_hash = w3.eth.send_raw_transaction(raw_tx)
         
-        print(f'transaction submitted: {tx_hash}')
+        print(f'transaction submitted: {tx_hash.hex()}')
 
         try: 
             w3.eth.wait_for_transaction_receipt(tx_hash)

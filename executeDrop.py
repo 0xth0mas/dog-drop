@@ -29,36 +29,47 @@ def main() -> None:
     nonce = w3.eth.get_transaction_count(sender.address)
     print(f"Start nonce: {nonce}")
 
+    retryCount = 0
+    
     while True: 
         strNonce = str(nonce)
         if not strNonce in transactions.keys():
             print("Finished.")
             return
-        
-        raw_tx = None
-        if "approval" in transactions[strNonce].keys():
-            raw_tx = transactions[strNonce]["approval"]
-        else:
-            drop_tx = gasliteDrop.functions.airdropERC20(
-                transactions[strNonce]["drop"]["tokenAddress"], 
-                transactions[strNonce]["drop"]["recipients"], 
-                transactions[strNonce]["drop"]["amounts"],
-                transactions[strNonce]["drop"]["totalAmount"]
-            ).build_transaction({'nonce': nonce, 'gas': 24000000})
-            raw_tx = w3.eth.account.sign_transaction(drop_tx, senderPK).rawTransaction
-        
-        tx_hash = w3.eth.send_raw_transaction(raw_tx)
-        
-        print(f'transaction submitted: {tx_hash.hex()}')
+
 
         try: 
-            w3.eth.wait_for_transaction_receipt(tx_hash)
-        except: 
-            print(f'failed to mine transaction')
-            return
-        
-        nonce = nonce + 1
-        time.sleep(2.0)
+            raw_tx = None
+            if "approval" in transactions[strNonce].keys():
+                raw_tx = transactions[strNonce]["approval"]
+            else:
+                drop_tx = gasliteDrop.functions.airdropERC20(
+                    transactions[strNonce]["drop"]["tokenAddress"], 
+                    transactions[strNonce]["drop"]["recipients"], 
+                    transactions[strNonce]["drop"]["amounts"],
+                    transactions[strNonce]["drop"]["totalAmount"]
+                ).build_transaction({'nonce': nonce, 'gas': 24000000})
+                raw_tx = w3.eth.account.sign_transaction(drop_tx, senderPK).rawTransaction
+            
+            tx_hash = w3.eth.send_raw_transaction(raw_tx)
+            
+            print(f'transaction submitted: {tx_hash.hex()}')
+
+            try: 
+                w3.eth.wait_for_transaction_receipt(tx_hash)
+            except: 
+                print(f'failed to mine transaction')
+                return
+            
+            nonce = nonce + 1
+            retryCount = 0
+            time.sleep(2.0)
+        except Exception as err: 
+            retryCount = retryCount + 1
+            if retryCount > 5: 
+                print(f'Error: {err}')
+                return 
+            time.sleep(2.0)
 
 if __name__ == "__main__":
     main()

@@ -45,7 +45,7 @@ def main() -> None:
     
     transactions = {}
 
-    approve_tx = token.functions.approve(w3.to_checksum_address(gasliteDropAddress), int(constants.MAX_INT, 16)).build_transaction({'nonce': nonce})
+    approve_tx = token.functions.approve(w3.to_checksum_address(gasliteDropAddress), int(constants.MAX_INT, 16)).build_transaction({'from': sender.address, 'nonce': nonce})
     signed_approve_tx = w3.eth.account.sign_transaction(approve_tx, senderPK)
     transactions[nonce] = {"approval": signed_approve_tx.rawTransaction.hex()}
 
